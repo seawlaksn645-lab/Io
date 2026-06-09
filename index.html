@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blynk IoT Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    background:#0f1117;
+    color:#fff;
+    min-height:100vh;
+    padding:25px;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+.header{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.header h1{
+    color:#2196f3;
+}
+
+.dashboard{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:#1a1d27;
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 10px 20px rgba(0,0,0,.4);
+}
+
+.card h3{
+    margin-bottom:15px;
+}
+
+/* Switch */
+
+.switch{
+    position:relative;
+    display:inline-block;
+    width:70px;
+    height:36px;
+}
+
+.switch input{
+    display:none;
+}
+
+.sliderToggle{
+    position:absolute;
+    cursor:pointer;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    background:#444;
+    transition:.4s;
+    border-radius:50px;
+}
+
+.sliderToggle:before{
+    position:absolute;
+    content:"";
+    width:28px;
+    height:28px;
+    left:4px;
+    bottom:4px;
+    background:white;
+    border-radius:50%;
+    transition:.4s;
+}
+
+input:checked + .sliderToggle{
+    background:#ff3b30;
+}
+
+input:checked + .sliderToggle:before{
+    transform:translateX(34px);
+}
+
+/* LED */
+
+.led{
+    width:45px;
+    height:45px;
+    border-radius:50%;
+    background:#333;
+    margin:auto;
+}
+
+.led.on{
+    background:#00ff55;
+    box-shadow:0 0 20px #00ff55;
+}
+
+/* Slider */
+
+.range{
+    width:100%;
+}
+
+.value{
+    text-align:center;
+    margin-top:10px;
+    font-size:26px;
+    color:#2196f3;
+}
+
+/* Gauge */
+
+.gauge{
+    width:180px;
+    height:180px;
+    border-radius:50%;
+    margin:auto;
+    background:conic-gradient(#2196f3 0deg,#333 0deg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.gauge-inner{
+    width:130px;
+    height:130px;
+    background:#1a1d27;
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+}
+
+.temp{
+    font-size:32px;
+    font-weight:bold;
+}
+
+/* Label */
+
+.labelBox{
+    background:#10141c;
+    border-radius:12px;
+    padding:15px;
+    min-height:60px;
+    margin-bottom:10px;
+}
+
+input[type=text]{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    margin-bottom:10px;
+    background:#252b36;
+    color:white;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:10px;
+    background:#2196f3;
+    color:white;
+    cursor:pointer;
+    font-size:16px;
+}
+
+button:hover{
+    opacity:.9;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+<h1>BLYNK CONTROL PANEL</h1>
+<p>Modern IoT Dashboard</p>
+</div>
+
+<div class="dashboard">
+
+<!-- Power -->
+
+<div class="card">
+<h3>ปุ่มเปิด / ปิด</h3>
+
+<label class="switch">
+<input type="checkbox" id="powerBtn">
+<span class="sliderToggle"></span>
+</label>
+
+</div>
+
+<!-- Light -->
+
+<div class="card">
+<h3>ปรับค่าแสง</h3>
+
+<input type="range"
+id="lightSlider"
+class="range"
+min="0"
+max="255"
+value="0">
+
+<div class="value" id="lightValue">0</div>
+
+</div>
+
+<!-- LED -->
+
+<div class="card">
+<h3>สถานะการทำงาน</h3>
+
+<div class="led" id="statusLed"></div>
+
+<p style="text-align:center;margin-top:10px;">
+เชื่อมต่อ Blynk
+</p>
+
+</div>
+
+<!-- Temp -->
+
+<div class="card">
+
+<h3>ค่าอุณหภูมิ</h3>
+
+<div class="gauge" id="gauge">
+
+<div class="gauge-inner">
+<div class="temp" id="tempValue">0°C</div>
+</div>
+
+</div>
+
+<br>
+
+<input
+type="range"
+min="0"
+max="100"
+value="0"
+class="range"
+id="tempSlider">
+
+</div>
+
+<!-- Message -->
+
+<div class="card">
+
+<h3>การตอบกลับ</h3>
+
+<div class="labelBox" id="responseText">
+ไม่มีข้อความ
+</div>
+
+<input
+type="text"
+id="msgInput"
+placeholder="พิมพ์ข้อความ">
+
+<button onclick="sendMessage()">
+ส่งข้อความ
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const TOKEN = "bfyzXULs85uohbvsW28ED11v2oUvVcRj";
+
+const powerBtn = document.getElementById("powerBtn");
+const statusLed = document.getElementById("statusLed");
+
+const lightSlider = document.getElementById("lightSlider");
+const lightValue = document.getElementById("lightValue");
+
+const tempSlider = document.getElementById("tempSlider");
+const tempValue = document.getElementById("tempValue");
+
+const gauge = document.getElementById("gauge");
+
+const responseText = document.getElementById("responseText");
+
+/* Power */
+
+powerBtn.addEventListener("change", async ()=>{
+
+const value = powerBtn.checked ? 1 : 0;
+
+await fetch(
+`https://blynk.cloud/external/api/update?token=${TOKEN}&V0=${value}`
+);
+
+await fetch(
+`https://blynk.cloud/external/api/update?token=${TOKEN}&V1=${value}`
+);
+
+statusLed.classList.toggle("on",value===1);
+
+});
+
+/* Light */
+
+lightSlider.addEventListener("input", async ()=>{
+
+lightValue.innerHTML = lightSlider.value;
+
+await fetch(
+`https://blynk.cloud/external/api/update?token=${TOKEN}&V2=${lightSlider.value}`
+);
+
+});
+
+/* Temp */
+
+tempSlider.addEventListener("input", async ()=>{
+
+const temp = tempSlider.value;
+
+tempValue.innerHTML = temp + "°C";
+
+const deg = (temp/100)*360;
+
+gauge.style.background =
+`conic-gradient(#2196f3 ${deg}deg,#333 ${deg}deg)`;
+
+await fetch(
+`https://blynk.cloud/external/api/update?token=${TOKEN}&V3=${temp}`
+);
+
+});
+
+/* Message */
+
+async function sendMessage(){
+
+const msg =
+document.getElementById("msgInput").value;
+
+await fetch(
+`https://blynk.cloud/external/api/update?token=${TOKEN}&V4=${encodeURIComponent(msg)}`
+);
+
+responseText.innerHTML = msg;
+
+}
+
+/* Sync Blynk */
+
+async function updateDashboard(){
+
+try{
+
+let led =
+await fetch(
+`https://blynk.cloud/external/api/get?token=${TOKEN}&V1`
+);
+
+let ledState =
+(await led.text()).trim();
+
+statusLed.classList.toggle(
+"on",
+ledState==="1"
+);
+
+/* Temp */
+
+let temp =
+await fetch(
+`https://blynk.cloud/external/api/get?token=${TOKEN}&V3`
+);
+
+let tempData =
+(await temp.text()).trim();
+
+if(tempData){
+
+tempValue.innerHTML =
+tempData + "°C";
+
+tempSlider.value =
+tempData;
+
+let deg =
+(tempData/100)*360;
+
+gauge.style.background =
+`conic-gradient(#2196f3 ${deg}deg,#333 ${deg}deg)`;
+
+}
+
+/* Label */
+
+let label =
+await fetch(
+`https://blynk.cloud/external/api/get?token=${TOKEN}&V4`
+);
+
+responseText.innerHTML =
+await label.text();
+
+}
+catch(err){
+console.log(err);
+}
+
+}
+
+updateDashboard();
+
+setInterval(updateDashboard,2000);
+
+</script>
+
+</body>
+</html>
